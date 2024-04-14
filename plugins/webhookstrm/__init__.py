@@ -7,21 +7,21 @@ from app.log import logger
 from app.schemas import TransferInfo, RefreshMediaItem
 from app.core.context import MediaInfo
 
-class WebHookStrm(_PluginBase):
+class WebHook(_PluginBase):
     # 插件名称
-    plugin_name = "WebhookStrm"
+    plugin_name = "Webhook-strm"
     # 插件描述
     plugin_desc = "事件发生时向第三方地址发送请求。"
     # 插件图标
     plugin_icon = "webhook.png"
     # 插件版本
-    plugin_version = "1.0"
+    plugin_version = "1.1"
     # 插件作者
     plugin_author = "jxxghp"
     # 作者主页
     author_url = "https://github.com/jxxghp"
     # 插件配置项ID前缀
-    plugin_config_prefix = "webhookstrm_"
+    plugin_config_prefix = "webhook_strm_"
     # 加载顺序
     plugin_order = 40
     # 可使用的用户级别
@@ -161,23 +161,23 @@ class WebHookStrm(_PluginBase):
             else:
                 return str(_event)
 
-        event_info = {
-            "type": event.event_type,
-            "data": __to_dict(event.event_data)
-        }
-
-        if self._method == 'POST':
-            ret = RequestUtils(content_type="application/json").post_res(self._webhook_url, json=event_info)
-        else:
-            ret = RequestUtils().get_res(self._webhook_url, params=event_info)
         event_info: dict = event.event_data
-        if not event_info:
-            return
-
         # 入库数据
         transferinfo: TransferInfo = event_info.get("transferinfo")
         mediainfo: MediaInfo = event_info.get("mediainfo")
         logger.info(f"转移成功：{mediainfo.title}，目的地址：{transferinfo.target_path}")
+        send_data = {
+            "target_path": transferinfo.target_path
+        }
+        if self._method == 'POST':
+            ret = RequestUtils(content_type="application/json").post_res(self._webhook_url, json=send_data)
+        else:
+            ret = RequestUtils().get_res(self._webhook_url, params=send_data)
+        event_info: dict = event.event_data
+        if not event_info:
+            return
+
+
         if ret:
             logger.info("发送成功：%s" % self._webhook_url)
         elif ret is not None:
