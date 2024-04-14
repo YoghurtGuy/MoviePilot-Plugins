@@ -1,6 +1,6 @@
 from app.plugins import _PluginBase
 from app.core.event import eventmanager
-from app.schemas.types import EventType
+from app.schemas.types import EventType,MediaType
 from app.utils.http import RequestUtils
 from typing import Any, List, Dict, Tuple
 from app.log import logger
@@ -15,7 +15,7 @@ class WebHook(_PluginBase):
     # 插件图标
     plugin_icon = "webhook.png"
     # 插件版本
-    plugin_version = "1.1"
+    plugin_version = "1.2"
     # 插件作者
     plugin_author = "jxxghp"
     # 作者主页
@@ -165,6 +165,9 @@ class WebHook(_PluginBase):
         # 入库数据
         transferinfo: TransferInfo = event_info.get("transferinfo")
         mediainfo: MediaInfo = event_info.get("mediainfo")
+        if mediainfo.type == MediaType.TV:
+            logger.info(f"检测到{mediainfo.title}为{mediainfo.type}，不发送请求")
+            return
         logger.info(f"转移成功：{mediainfo.title}，目的地址：{transferinfo.target_path}")
         send_data = {
             "target_path": transferinfo.target_path
