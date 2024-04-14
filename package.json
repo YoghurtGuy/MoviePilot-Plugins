@@ -2,7 +2,7 @@
     "WebHookStrm": {
         "name": "WebhookStrm",
         "description": "入库事件发生时向第三方地址发送请求。",
-        "version": "1.0",
+        "version": "1.1",
         "icon": "webhook.png",
         "author": "jxxghp",
         "level": 1
