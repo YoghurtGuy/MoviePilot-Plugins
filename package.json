@@ -1,10 +1,18 @@
 {
     "WebHookStrm": {
         "name": "WebhookStrm",
-        "description": "入库事件发生时向第三方地址发送请求。",
+        "description": "入库事件发生时向第三方地址发送请求strm。",
         "version": "1.1",
         "icon": "webhook.png",
         "author": "jxxghp",
+        "level": 1
+    },
+    "SubscribeSearch": {
+        "name": "SubscribeSearch",
+        "description": "添加订阅后搜索一次",
+        "version": "1.0",
+        "icon": "webhook.png",
+        "author": "YoghurtGuy",
         "level": 1
     }
 }
