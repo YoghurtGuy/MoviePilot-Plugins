@@ -6,6 +6,8 @@ from app.schemas.types import EventType
 from typing import Any, List, Dict, Tuple
 from app.log import logger
 from app.chain.subscribe import SubscribeChain
+
+
 class SubscribeSearch(_PluginBase):
     # 插件名称
     plugin_name = "SubscribeSearch"
@@ -14,7 +16,7 @@ class SubscribeSearch(_PluginBase):
     # 插件图标
     plugin_icon = "webhook.png"
     # 插件版本
-    plugin_version = "1.0"
+    plugin_version = "1.1"
     # 插件作者
     plugin_author = "YoghurtGuy"
     # 作者主页
@@ -107,10 +109,7 @@ class SubscribeSearch(_PluginBase):
         pass
 
     @eventmanager.register(EventType.SubscribeAdded)
-    def send(self, event):
-        """
-        向第三方Webhook发送请求
-        """
+    def subscribesearch(self, event):
         if not self._enabled:
             return
 
