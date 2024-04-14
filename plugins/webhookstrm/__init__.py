@@ -165,9 +165,6 @@ class WebHook(_PluginBase):
         # 入库数据
         transferinfo: TransferInfo = event_info.get("transferinfo")
         mediainfo: MediaInfo = event_info.get("mediainfo")
-        if mediainfo.type == MediaType.TV:
-            logger.info(f"检测到{mediainfo.title}为{mediainfo.type}，不发送请求")
-            return
         logger.info(f"转移成功：{mediainfo.title}，目的地址：{transferinfo.target_path}")
         send_data = {
             "target_path": transferinfo.target_path
