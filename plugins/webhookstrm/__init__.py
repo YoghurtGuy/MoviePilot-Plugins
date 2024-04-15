@@ -7,7 +7,7 @@ from app.log import logger
 from app.schemas import TransferInfo, RefreshMediaItem
 from app.core.context import MediaInfo
 
-class WebHook(_PluginBase):
+class WebHookStrm(_PluginBase):
     # 插件名称
     plugin_name = "Webhook-strm"
     # 插件描述
