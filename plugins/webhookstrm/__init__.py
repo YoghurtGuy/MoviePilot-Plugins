@@ -1,6 +1,6 @@
 from app.plugins import _PluginBase
 from app.core.event import eventmanager
-from app.schemas.types import EventType,MediaType
+from app.schemas.types import EventType
 from app.utils.http import RequestUtils
 from typing import Any, List, Dict, Tuple
 from app.log import logger
@@ -15,7 +15,7 @@ class WebHook(_PluginBase):
     # 插件图标
     plugin_icon = "webhook.png"
     # 插件版本
-    plugin_version = "1.2"
+    plugin_version = "1.3"
     # 插件作者
     plugin_author = "jxxghp"
     # 作者主页
