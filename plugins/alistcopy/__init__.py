@@ -13,7 +13,7 @@ from app.core.context import MediaInfo
 
 class AlistCopy(_PluginBase):
     # 插件名称
-    plugin_name = "AListCopy"
+    plugin_name = "AlistCopy"
     # 插件描述
     plugin_desc = "转移成功后向AList发送复制请求。"
     # 插件图标
