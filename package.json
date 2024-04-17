@@ -14,5 +14,13 @@
         "icon": "webhook.png",
         "author": "YoghurtGuy",
         "level": 1
+    },
+    "SubscribeSearch": {
+        "name": "AlistCopy",
+        "description": "入库事件发生时向Alist发送复制请求",
+        "version": "1.0",
+        "icon": "webhook.png",
+        "author": "YoghurtGuy",
+        "level": 1
     }
 }
