@@ -1,6 +1,7 @@
 import json
 import os
 
+import requests
 from app.plugins import _PluginBase
 from app.core.event import eventmanager
 from app.schemas.types import EventType
@@ -19,7 +20,7 @@ class AlistCopy(_PluginBase):
     # 插件图标
     plugin_icon = "webhook.png"
     # 插件版本
-    plugin_version = "1.0"
+    plugin_version = "1.2"
     # 插件作者
     plugin_author = "YoghurtGuy"
     # 作者主页
@@ -27,7 +28,7 @@ class AlistCopy(_PluginBase):
     # 插件配置项ID前缀
     plugin_config_prefix = "aList_copy_"
     # 加载顺序
-    plugin_order = 88
+    plugin_order = 40
     # 可使用的用户级别
     auth_level = 1
 
@@ -241,7 +242,12 @@ class AlistCopy(_PluginBase):
             ]
         })
         logger.info(f"发送数据：{send_data}")
-        ret = RequestUtils(content_type="application/json").post_res(self._alist_url+"/api/fs/copy", json=send_data)
+        headers = {
+            'Authorization': token,
+            'User-Agent': 'AlistCopy/1.0.0',
+            'Content-Type': 'application/json'
+        }
+        ret = requests.request("POST", self._alist_url+"/api/fs/copy", headers=headers, data=send_data)
 
         if ret:
             logger.info("复制任务提交成功")
