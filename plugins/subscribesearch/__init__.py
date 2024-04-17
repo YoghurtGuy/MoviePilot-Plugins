@@ -16,7 +16,7 @@ class SubscribeSearch(_PluginBase):
     # 插件图标
     plugin_icon = "webhook.png"
     # 插件版本
-    plugin_version = "1.1"
+    plugin_version = "1.2"
     # 插件作者
     plugin_author = "YoghurtGuy"
     # 作者主页
@@ -117,7 +117,7 @@ class SubscribeSearch(_PluginBase):
         # 入库数据
         subscribe_id = event_info.get("subscribe_id")
         logger.info(f"有新的订阅，订阅ID：{subscribe_id}")
-        time.sleep(self._delay)
+        time.sleep(int(self._delay))
         logger.info(f"延迟{self._delay}秒结束，开始搜索")
         SubscribeChain().search(subscribe_id)
 
