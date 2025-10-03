@@ -12,7 +12,7 @@ from plexapi.library import LibrarySection
 
 from app.chain.mediaserver import MediaServerChain
 from app.chain.tmdb import TmdbChain
-from app.core.cache import cache_backend
+from app.core.cache import Cache
 from app.core.context import MediaInfo
 from app.log import logger
 from app.plugins import PluginChian
@@ -36,6 +36,7 @@ class ScrapeHelper:
         self.service = service
         self.plex = service.instance if service else None
         self.libraries = libraries
+        self.cache_backend = Cache(maxsize=100000, ttl=60 * 60 * 24 * 3)
 
         if not config:
             return
@@ -837,10 +838,11 @@ class ScrapeHelper:
         return match.group(1) if match else None
 
     @staticmethod
-    def clear_cache():
+    def clear_cache(self):
         """
         清理缓存
         """
-        cache_backend.clear(region="plex_tmdb_media")
-        cache_backend.clear(region="plex_tmdb_person")
-        cache_backend.clear(region="plex_douban_media")
+        self.cache_backend.clear(region="plex_tmdb_media")
+        self.cache_backend.clear(region="plex_tmdb_person")
+        self.cache_backend.clear(region="plex_douban_media")
+        self.cache_backend.close()
