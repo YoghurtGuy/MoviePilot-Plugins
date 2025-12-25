@@ -77,6 +77,8 @@ class BrushConfig:
         self.qb_category = config.get("qb_category")
         self.site_hr_active = config.get("site_hr_active", False)
         self.site_skip_tips = config.get("site_skip_tips", False)
+        self.add_tags = config.get("add_tags")  # 添加种子时附加的标签，分号分隔
+        self.delete_only_tags = config.get("delete_only_tags")  # 仅删除带有这些标签的种子，分号分隔
 
         self.brush_tag = "刷流"
         # 站点独立配置
@@ -2710,6 +2712,12 @@ class BrushFlowLowFreq(_PluginBase):
 
             torrent_info = self.__get_torrent_info(torrent)
 
+            # 检查是否满足删除限定标签条件
+            can_delete_by_tag, tag_reason = self.__check_delete_only_tags(torrent=torrent, site_name=site_name)
+            if not can_delete_by_tag:
+                logger.debug(f"站点：{site_name}，{tag_reason}，跳过删除：{torrent_title}|{torrent_desc}")
+                continue
+
             # 删除种子的具体实现可能会根据实际情况略有不同
             should_delete, reason = self.__evaluate_conditions_for_delete(site_name=site_name,
                                                                           torrent_info=torrent_info,
@@ -2748,6 +2756,12 @@ class BrushFlowLowFreq(_PluginBase):
             torrent_desc = torrent_task.get("description", "")
 
             torrent_info = self.__get_torrent_info(torrent)
+
+            # 检查是否满足删除限定标签条件
+            can_delete_by_tag, tag_reason = self.__check_delete_only_tags(torrent=torrent, site_name=site_name)
+            if not can_delete_by_tag:
+                logger.debug(f"站点：{site_name}，{tag_reason}，跳过删除：{torrent_title}|{torrent_desc}")
+                continue
 
             # 删除种子的具体实现可能会根据实际情况略有不同
             should_delete, reason = self.__evaluate_proxy_pre_conditions_for_delete(site_name=site_name,
@@ -2855,12 +2869,29 @@ class BrushFlowLowFreq(_PluginBase):
             # 这里根据排除后的种子列表，再次从下载器中找到已完成的任务
             downloader = self.downloader
             completed_torrents = downloader.get_completed_torrents(ids=remaining_hashes)
-            remaining_hashes = {self.__get_hash(torrent) for torrent in completed_torrents}
+            
+            # 构建 torrent 对象的字典，用于后续标签检查
+            completed_torrents_dict = {self.__get_hash(torrent): torrent for torrent in completed_torrents}
+            remaining_hashes = set(completed_torrents_dict.keys())
             remaining_torrents = [(_hash, torrent_info_map[_hash]) for _hash in remaining_hashes]
 
-            # 准备一个列表，用于存放满足条件的种子，即非HR种子且有明确做种时间
-            filtered_torrents = [(_hash, info['seeding_time']) for _hash, info in remaining_torrents if
-                                 not torrent_tasks[_hash].get("hit_and_run", False)]
+            # 准备一个列表，用于存放满足条件的种子，即非HR种子且有明确做种时间，且满足删除限定标签条件
+            filtered_torrents = []
+            for _hash, info in remaining_torrents:
+                torrent_task = torrent_tasks.get(_hash)
+                if not torrent_task:
+                    continue
+                # 排除HR种子
+                if torrent_task.get("hit_and_run", False):
+                    continue
+                # 检查删除限定标签
+                torrent = completed_torrents_dict.get(_hash)
+                if torrent:
+                    site_name = torrent_task.get("site_name", "")
+                    can_delete_by_tag, _ = self.__check_delete_only_tags(torrent=torrent, site_name=site_name)
+                    if not can_delete_by_tag:
+                        continue
+                filtered_torrents.append((_hash, info['seeding_time']))
             sorted_torrents = sorted(filtered_torrents, key=lambda x: x[1], reverse=True)
 
             # 进行额外的删除操作，直到满足最小阈值或没有更多种子可删除
@@ -3132,6 +3163,8 @@ class BrushFlowLowFreq(_PluginBase):
             "qb_category": brush_config.qb_category,
             "enable_site_config": brush_config.enable_site_config,
             "site_config": brush_config.site_config,
+            "add_tags": brush_config.add_tags,
+            "delete_only_tags": brush_config.delete_only_tags,
             "_tabs": self._tabs
         }
 
@@ -3273,6 +3306,12 @@ class BrushFlowLowFreq(_PluginBase):
             down_speed = down_speed * 1024 if down_speed else None
             # 生成随机Tag
             tag = StringUtils.generate_random_str(10)
+            # 基础标签
+            torrent_tags = [brush_config.brush_tag, tag]
+            # 添加配置的额外标签（分号分隔）
+            if brush_config.add_tags:
+                extra_tags = [t.strip() for t in brush_config.add_tags.split(';') if t.strip()]
+                torrent_tags.extend(extra_tags)
             # 如果开启代理下载以及种子地址不是磁力地址，则请求种子到内存再传入下载器
             if not torrent_content.startswith("magnet"):
                 response = RequestUtils(cookies=cookies,
@@ -3287,7 +3326,7 @@ class BrushFlowLowFreq(_PluginBase):
                                                download_dir=download_dir,
                                                cookie=cookies,
                                                category=brush_config.qb_category,
-                                               tag=["已整理", brush_config.brush_tag, tag],
+                                               tag=torrent_tags,
                                                upload_limit=up_speed,
                                                download_limit=down_speed)
                 if not state:
@@ -3302,6 +3341,12 @@ class BrushFlowLowFreq(_PluginBase):
             return None
 
         elif self.downloader_helper.is_downloader("transmission", service=self.service_info):
+            # 基础标签
+            torrent_labels = [rush_config.brush_tag]
+            # 添加配置的额外标签（分号分隔）
+            if brush_config.add_tags:
+                extra_labels = [t.strip() for t in brush_config.add_tags.split(';') if t.strip()]
+                torrent_labels.extend(extra_labels)
             # 如果开启代理下载以及种子地址不是磁力地址，则请求种子到内存再传入下载器
             if not torrent_content.startswith("magnet"):
                 response = RequestUtils(cookies=cookies,
@@ -3315,7 +3360,7 @@ class BrushFlowLowFreq(_PluginBase):
                 torrent = downloader.add_torrent(content=torrent_content,
                                                  download_dir=download_dir,
                                                  cookie=cookies,
-                                                 labels=["已整理", brush_config.brush_tag])
+                                                 labels=torrent_labels)
                 if not torrent:
                     return None
                 else:
@@ -3786,6 +3831,34 @@ class BrushFlowLowFreq(_PluginBase):
             if not any(exclude in labels for exclude in exclude_tags):
                 filter_torrents.append(torrent)
         return filter_torrents
+
+    def __check_delete_only_tags(self, torrent: Any, site_name: str = None) -> Tuple[bool, str]:
+        """
+        检查种子是否包含删除限定标签
+        如果配置了 delete_only_tags，则只有种子包含其中任一标签时才允许删除
+        :param torrent: 种子对象
+        :param site_name: 站点名称（用于获取站点特定配置）
+        :return: (是否允许删除, 原因说明)
+        """
+        brush_config = self.__get_brush_config(sitename=site_name)
+        
+        # 如果没有配置 delete_only_tags，则不限制删除
+        if not brush_config.delete_only_tags or not brush_config.delete_only_tags.strip():
+            return True, ""
+        
+        # 解析配置的标签（分号分隔）
+        required_tags = set(tag.strip() for tag in brush_config.delete_only_tags.split(';') if tag.strip())
+        if not required_tags:
+            return True, ""
+        
+        # 获取种子的标签
+        labels = self.__get_label(torrent)
+        
+        # 检查种子是否包含任一限定标签
+        if any(tag in labels for tag in required_tags):
+            return True, ""
+        
+        return False, f"种子不包含删除限定标签 '{brush_config.delete_only_tags}'"
 
     def __get_subscribe_titles(self) -> Set[str]:
         """
