@@ -253,7 +253,7 @@ class BrushFlowLowFreq(_PluginBase):
     # 插件图标
     plugin_icon = "brush.jpg"
     # 插件版本
-    plugin_version = "4.3.2"
+    plugin_version = "4.3.2.1"
     # 插件作者
     plugin_author = "jxxghp,InfinityPacer,YoghurtGuy"
     # 作者主页
@@ -1207,6 +1207,23 @@ class BrushFlowLowFreq(_PluginBase):
                                                         }
                                                     }
                                                 ]
+                                            },
+                                            {
+                                                'component': 'VCol',
+                                                'props': {
+                                                    'cols': 12,
+                                                    'md': 4
+                                                },
+                                                'content': [
+                                                    {
+                                                        'component': 'VTextField',
+                                                        'props': {
+                                                            'model': 'add_tags',
+                                                            'label': '添加种子标签',
+                                                            'placeholder': '如：标签1;标签2，分号分隔'
+                                                        }
+                                                    }
+                                                ]
                                             }
                                         ]
                                     }
@@ -1512,6 +1529,23 @@ class BrushFlowLowFreq(_PluginBase):
                                                             'model': 'delete_except_tags',
                                                             'label': '删除排除标签',
                                                             'placeholder': '如：MOVIEPILOT,H&R'
+                                                        }
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                'component': 'VCol',
+                                                'props': {
+                                                    "cols": 12,
+                                                    "md": 4
+                                                },
+                                                'content': [
+                                                    {
+                                                        'component': 'VTextField',
+                                                        'props': {
+                                                            'model': 'delete_only_tags',
+                                                            'label': '仅删除带标签',
+                                                            'placeholder': '如：标签1;标签2，分号分隔'
                                                         }
                                                     }
                                                 ]
